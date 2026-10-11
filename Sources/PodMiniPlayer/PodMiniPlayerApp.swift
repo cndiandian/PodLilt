@@ -18,6 +18,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var sizeItems = [NSMenuItem]()
     private var moveTimer: Timer?
     private var isCorrectingPosition = false
+    private let windowOriginKey = "playerWindowOrigin"
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -30,6 +31,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         model.stop()
         moveTimer?.invalidate()
+        keepPanelOnScreen()
+        savePanelOrigin()
     }
 
     private func makePanel() {
@@ -57,7 +60,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         panel.contentView = NSHostingView(rootView: PlayerView(model: model))
         panel.delegate = self
 
-        if let screen = NSScreen.main {
+        if let savedOrigin = savedPanelOrigin {
+            let savedFrame = NSRect(origin: savedOrigin, size: panel.frame.size)
+            panel.setFrameOrigin(onScreenOrigin(for: savedFrame) ?? savedOrigin)
+        } else if let screen = NSScreen.main {
             let visible = screen.visibleFrame
             panel.setFrameOrigin(NSPoint(x: visible.maxX - size.width - 24,
                                          y: visible.maxY - size.height - 24))
@@ -66,6 +72,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         }
         panel.orderFrontRegardless()
         self.panel = panel
+        savePanelOrigin()
     }
 
     private func makeStatusItem() {
@@ -110,9 +117,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private func applySize(_ size: PlayerSize) {
         guard let panel else { return }
         let topRight = NSPoint(x: panel.frame.maxX, y: panel.frame.maxY)
+        isCorrectingPosition = true
         panel.setContentSize(size.dimensions)
         panel.setFrameOrigin(NSPoint(x: topRight.x - panel.frame.width,
                                      y: topRight.y - panel.frame.height))
+        isCorrectingPosition = false
+        keepPanelOnScreen()
+        savePanelOrigin()
         for item in sizeItems {
             item.state = item.representedObject as? String == size.rawValue ? .on : .off
         }
@@ -133,24 +144,42 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         timer.invalidate()
         moveTimer = nil
         keepPanelOnScreen()
+        savePanelOrigin()
     }
 
     private func keepPanelOnScreen() {
         guard let panel else { return }
         let frame = panel.frame
-        guard let screen = NSScreen.screens.min(by: { left, right in
-            distanceSquared(from: frame, to: left.visibleFrame)
-                < distanceSquared(from: frame, to: right.visibleFrame)
-        }) else { return }
-        let visible = screen.visibleFrame
-        let maxX = max(visible.minX, visible.maxX - frame.width)
-        let maxY = max(visible.minY, visible.maxY - frame.height)
-        let origin = NSPoint(x: min(max(frame.minX, visible.minX), maxX),
-                             y: min(max(frame.minY, visible.minY), maxY))
-        guard origin != frame.origin else { return }
+        guard let origin = onScreenOrigin(for: frame), origin != frame.origin else { return }
         isCorrectingPosition = true
         panel.setFrameOrigin(origin)
         isCorrectingPosition = false
+    }
+
+    private func onScreenOrigin(for frame: NSRect) -> NSPoint? {
+        guard let screen = NSScreen.screens.min(by: { left, right in
+            distanceSquared(from: frame, to: left.visibleFrame)
+                < distanceSquared(from: frame, to: right.visibleFrame)
+        }) else { return nil }
+        let visible = screen.visibleFrame
+        let maxX = max(visible.minX, visible.maxX - frame.width)
+        let maxY = max(visible.minY, visible.maxY - frame.height)
+        return NSPoint(x: min(max(frame.minX, visible.minX), maxX),
+                       y: min(max(frame.minY, visible.minY), maxY))
+    }
+
+    private var savedPanelOrigin: NSPoint? {
+        guard let coordinates = UserDefaults.standard.array(forKey: windowOriginKey) as? [NSNumber],
+              coordinates.count == 2 else { return nil }
+        let x = coordinates[0].doubleValue
+        let y = coordinates[1].doubleValue
+        guard x.isFinite, y.isFinite else { return nil }
+        return NSPoint(x: x, y: y)
+    }
+
+    private func savePanelOrigin() {
+        guard let origin = panel?.frame.origin else { return }
+        UserDefaults.standard.set([Double(origin.x), Double(origin.y)], forKey: windowOriginKey)
     }
 
     private func distanceSquared(from window: NSRect, to screen: NSRect) -> CGFloat {
