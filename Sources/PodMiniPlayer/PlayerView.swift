@@ -6,7 +6,7 @@ private enum Palette {
     static let raised = Color(red: 0.17, green: 0.18, blue: 0.22)
     static let line = Color.white.opacity(0.12)
     static let muted = Color(red: 0.69, green: 0.70, blue: 0.74)
-    static let accent = Color(red: 0.75, green: 0.59, blue: 1.0)
+    static let accent = Color.white
 }
 
 struct PlayerView: View {
@@ -24,8 +24,12 @@ struct PlayerView: View {
         .frame(width: model.playerSize.dimensions.width,
                height: model.playerSize.dimensions.height)
         .background(Palette.background, in: RoundedRectangle(cornerRadius: model.playerSize == .small ? 16 : 20, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: model.playerSize == .small ? 16 : 20, style: .continuous)
-            .stroke(Palette.line, lineWidth: 1))
+        .overlay {
+            if model.playerSize != .small {
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .stroke(Palette.line, lineWidth: 1)
+            }
+        }
         .foregroundStyle(.white)
         .onChange(of: model.playerSize) { _, _ in hoveringSmallArtwork = false }
     }
@@ -203,7 +207,7 @@ struct PlayerView: View {
     }
 
     private var smallContent: some View {
-        artwork(side: 96)
+        artwork(side: 96, cornerRadius: 16, showsBorder: false)
             .overlay {
                 if hoveringSmallArtwork, model.state == .ready {
                     ZStack {
@@ -220,6 +224,14 @@ struct PlayerView: View {
                     .transition(.opacity)
                 }
             }
+            .overlay {
+                if model.snapshot?.isPlaying == true {
+                    TimelineView(.periodic(from: .now, by: 1)) { context in
+                        smallProgress(at: context.date)
+                    }
+                    .allowsHitTesting(false)
+                }
+            }
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             .contextMenu {
                 ForEach(PlayerSize.allCases) { size in
@@ -233,6 +245,23 @@ struct PlayerView: View {
                 case .ended: hoveringSmallArtwork = false
                 }
             }
+    }
+
+    @ViewBuilder
+    private func smallProgress(at date: Date) -> some View {
+        let fraction = smallProgressFraction(at: date)
+        SmallProgressOutline(progress: 1)
+            .stroke(Palette.line, lineWidth: 1)
+        if let fraction {
+            SmallProgressOutline(progress: fraction)
+                .stroke(Palette.accent, lineWidth: 1)
+        }
+    }
+
+    private func smallProgressFraction(at date: Date) -> CGFloat? {
+        guard let position = model.position(at: date),
+              let duration = model.duration, duration > 0 else { return nil }
+        return CGFloat(min(1, max(0, position / duration)))
     }
 
     private var playerContent: some View {
@@ -270,7 +299,7 @@ struct PlayerView: View {
         .padding(.top, 8)
     }
 
-    private func artwork(side: CGFloat) -> some View {
+    private func artwork(side: CGFloat, cornerRadius: CGFloat = 11, showsBorder: Bool = true) -> some View {
         Group {
             if let image = model.artwork {
                 Image(nsImage: image)
@@ -286,8 +315,13 @@ struct PlayerView: View {
             }
         }
         .frame(width: side, height: side)
-        .clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 11).stroke(Palette.line, lineWidth: 1))
+        .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+        .overlay {
+            if showsBorder {
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .stroke(Palette.line, lineWidth: 1)
+            }
+        }
         .accessibilityLabel("节目封面")
     }
 
@@ -392,6 +426,35 @@ struct PlayerView: View {
         return hours > 0
             ? String(format: "%d:%02d:%02d", hours, minutes, remainder)
             : String(format: "%d:%02d", minutes, remainder)
+    }
+}
+
+private struct SmallProgressOutline: Shape {
+    var progress: CGFloat
+
+    var animatableData: CGFloat {
+        get { progress }
+        set { progress = newValue }
+    }
+
+    func path(in rect: CGRect) -> Path {
+        let bounds = rect.insetBy(dx: 1, dy: 1)
+        let radius: CGFloat = 15
+        var path = Path()
+        path.move(to: CGPoint(x: bounds.minX + radius, y: bounds.minY))
+        path.addLine(to: CGPoint(x: bounds.maxX - radius, y: bounds.minY))
+        path.addQuadCurve(to: CGPoint(x: bounds.maxX, y: bounds.minY + radius),
+                          control: CGPoint(x: bounds.maxX, y: bounds.minY))
+        path.addLine(to: CGPoint(x: bounds.maxX, y: bounds.maxY - radius))
+        path.addQuadCurve(to: CGPoint(x: bounds.maxX - radius, y: bounds.maxY),
+                          control: CGPoint(x: bounds.maxX, y: bounds.maxY))
+        path.addLine(to: CGPoint(x: bounds.minX + radius, y: bounds.maxY))
+        path.addQuadCurve(to: CGPoint(x: bounds.minX, y: bounds.maxY - radius),
+                          control: CGPoint(x: bounds.minX, y: bounds.maxY))
+        path.addLine(to: CGPoint(x: bounds.minX, y: bounds.minY + radius))
+        path.addQuadCurve(to: CGPoint(x: bounds.minX + radius, y: bounds.minY),
+                          control: CGPoint(x: bounds.minX, y: bounds.minY))
+        return path.trimmedPath(from: 0, to: min(1, max(0, progress)))
     }
 }
 
