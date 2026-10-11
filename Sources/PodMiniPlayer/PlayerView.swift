@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 private enum Palette {
@@ -132,10 +133,7 @@ struct PlayerView: View {
 
     private var mediumPlaybackInfo: some View {
         VStack(alignment: .leading, spacing: 3) {
-            Text(model.title)
-                .font(.system(size: 12, weight: .semibold))
-                .lineLimit(1)
-                .help(model.title)
+            ScrollingTitle(title: model.title, fontSize: 12, height: 16)
             Text(model.show)
                 .font(.system(size: 10))
                 .foregroundStyle(Palette.muted)
@@ -242,9 +240,7 @@ struct PlayerView: View {
             HStack(alignment: .center, spacing: 14) {
                 artwork(side: 78)
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(model.title)
-                        .font(.system(size: 14, weight: .semibold))
-                        .lineLimit(2)
+                    ScrollingTitle(title: model.title, fontSize: 14, height: 20)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .accessibilityAddTraits(.isHeader)
                     Text(model.show)
@@ -396,6 +392,63 @@ struct PlayerView: View {
         return hours > 0
             ? String(format: "%d:%02d:%02d", hours, minutes, remainder)
             : String(format: "%d:%02d", minutes, remainder)
+    }
+}
+
+private struct ScrollingTitle: View {
+    let title: String
+    let fontSize: CGFloat
+    let height: CGFloat
+    @State private var startedAt = Date()
+    private let spacing: CGFloat = 24
+    private let speed: CGFloat = 34
+
+    private var textWidth: CGFloat {
+        ceil((title as NSString).size(withAttributes: [
+            .font: NSFont.systemFont(ofSize: fontSize, weight: .semibold)
+        ]).width)
+    }
+
+    var body: some View {
+        GeometryReader { geometry in
+            let overflow = max(0, textWidth - geometry.size.width)
+            if overflow > 1 {
+                TimelineView(.periodic(from: .now, by: 1.0 / 30.0)) { context in
+                    HStack(spacing: spacing) {
+                        titleText.frame(width: textWidth, alignment: .leading)
+                        titleText.frame(width: textWidth, alignment: .leading)
+                    }
+                        .fixedSize(horizontal: true, vertical: false)
+                        .offset(x: offset(at: context.date, distance: textWidth + spacing))
+                        .frame(width: geometry.size.width, height: height, alignment: .leading)
+                        .clipped()
+                }
+            } else {
+                titleText
+                    .frame(width: geometry.size.width, height: height, alignment: .leading)
+                    .clipped()
+            }
+        }
+        .frame(height: height)
+        .onChange(of: title) { _, _ in startedAt = Date() }
+        .help(title)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(title)
+    }
+
+    private var titleText: some View {
+        Text(title)
+            .font(.system(size: fontSize, weight: .semibold))
+            .lineLimit(1)
+            .fixedSize(horizontal: true, vertical: false)
+    }
+
+    private func offset(at date: Date, distance: CGFloat) -> CGFloat {
+        let pause = 2.0
+        let travel = Double(distance / speed)
+        let cycle = travel + pause
+        let elapsed = max(0, date.timeIntervalSince(startedAt)).truncatingRemainder(dividingBy: cycle)
+        return -min(CGFloat(elapsed) * speed, distance)
     }
 }
 
