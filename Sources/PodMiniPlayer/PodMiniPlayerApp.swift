@@ -11,11 +11,13 @@ struct PodMiniPlayerApp: App {
 }
 
 @MainActor
-final class AppDelegate: NSObject, NSApplicationDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     let model = PlayerModel()
     private var panel: PlayerPanel?
     private var statusItem: NSStatusItem?
     private var sizeItems = [NSMenuItem]()
+    private var moveTimer: Timer?
+    private var isCorrectingPosition = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -27,6 +29,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         model.stop()
+        moveTimer?.invalidate()
     }
 
     private func makePanel() {
@@ -52,6 +55,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         panel.hidesOnDeactivate = false
         panel.acceptsMouseMovedEvents = true
         panel.contentView = NSHostingView(rootView: PlayerView(model: model))
+        panel.delegate = self
 
         if let screen = NSScreen.main {
             let visible = screen.visibleFrame
@@ -112,6 +116,47 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         for item in sizeItems {
             item.state = item.representedObject as? String == size.rawValue ? .on : .off
         }
+    }
+
+    func windowDidMove(_ notification: Notification) {
+        guard !isCorrectingPosition,
+              let movedWindow = notification.object as? NSWindow,
+              movedWindow === panel,
+              moveTimer == nil else { return }
+        moveTimer = Timer.scheduledTimer(timeInterval: 0.05, target: self,
+                                         selector: #selector(checkDragFinished(_:)),
+                                         userInfo: nil, repeats: true)
+    }
+
+    @objc private func checkDragFinished(_ timer: Timer) {
+        guard NSEvent.pressedMouseButtons == 0 else { return }
+        timer.invalidate()
+        moveTimer = nil
+        keepPanelOnScreen()
+    }
+
+    private func keepPanelOnScreen() {
+        guard let panel else { return }
+        let frame = panel.frame
+        guard let screen = NSScreen.screens.min(by: { left, right in
+            distanceSquared(from: frame, to: left.visibleFrame)
+                < distanceSquared(from: frame, to: right.visibleFrame)
+        }) else { return }
+        let visible = screen.visibleFrame
+        let maxX = max(visible.minX, visible.maxX - frame.width)
+        let maxY = max(visible.minY, visible.maxY - frame.height)
+        let origin = NSPoint(x: min(max(frame.minX, visible.minX), maxX),
+                             y: min(max(frame.minY, visible.minY), maxY))
+        guard origin != frame.origin else { return }
+        isCorrectingPosition = true
+        panel.setFrameOrigin(origin)
+        isCorrectingPosition = false
+    }
+
+    private func distanceSquared(from window: NSRect, to screen: NSRect) -> CGFloat {
+        let x = max(0, max(screen.minX - window.midX, window.midX - screen.maxX))
+        let y = max(0, max(screen.minY - window.midY, window.midY - screen.maxY))
+        return x * x + y * y
     }
 
     @objc private func openPodcasts() { model.openPodcasts() }
