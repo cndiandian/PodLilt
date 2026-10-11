@@ -42,5 +42,6 @@ cp "$project_dir/Vendor/MediaRemoteAdapter/bin/mediaremote-adapter.pl" "$app_dir
 cp "$project_dir/Vendor/MediaRemoteAdapter/LICENSE" "$app_dir/Contents/Resources/MediaRemoteAdapter-LICENSE.txt"
 ditto "$framework_dir" "$app_dir/Contents/Resources/MediaRemoteAdapter.framework"
 cp "$adapter_dir/MediaRemoteAdapterTestClient" "$app_dir/Contents/Resources/"
+xattr -dr com.apple.quarantine "$app_dir" 2>/dev/null || true
 /usr/bin/codesign --force --deep --sign - "$app_dir"
 echo "$app_dir"
