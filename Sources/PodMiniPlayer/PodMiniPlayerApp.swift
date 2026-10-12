@@ -46,7 +46,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             backing: .buffered,
             defer: false
         )
-        panel.title = "Pod Mini Player"
+        panel.title = "PodLilt"
         panel.titleVisibility = .hidden
         panel.titlebarAppearsTransparent = true
         panel.standardWindowButton(.closeButton)?.isHidden = true
@@ -81,8 +81,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     private func makeStatusItem() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        item.button?.image = NSImage(systemSymbolName: "waveform", accessibilityDescription: "Pod Mini Player")
-        item.button?.toolTip = "Pod Mini Player"
+        item.button?.image = NSImage(systemSymbolName: "waveform", accessibilityDescription: "PodLilt")
+        item.button?.toolTip = "PodLilt"
         let menu = NSMenu()
         menu.addItem(NSMenuItem(title: "显示或隐藏播放器", action: #selector(togglePanel), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "打开 Podcasts", action: #selector(openPodcasts), keyEquivalent: ""))
