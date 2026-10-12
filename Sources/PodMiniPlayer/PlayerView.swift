@@ -15,6 +15,14 @@ struct PlayerView: View {
     @State private var hoveringSmallArtwork = false
 
     var body: some View {
+        if #available(macOS 15.0, *) {
+            playerBody.gesture(WindowDragGesture())
+        } else {
+            playerBody
+        }
+    }
+
+    private var playerBody: some View {
         Group {
             switch model.playerSize {
             case .large: largeContent
