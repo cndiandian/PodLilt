@@ -76,15 +76,7 @@ struct PlayerView: View {
     private var sizePicker: some View {
         Menu {
             ForEach(PlayerSize.allCases) { size in
-                Button {
-                    model.setSize(size)
-                } label: {
-                    if model.playerSize == size {
-                        Label(size.title, systemImage: "checkmark")
-                    } else {
-                        Text(size.title)
-                    }
-                }
+                sizeOption(size)
             }
         } label: {
             Image(systemName: "gearshape")
@@ -99,6 +91,18 @@ struct PlayerView: View {
         .foregroundStyle(Palette.muted)
         .help("切换窗口尺寸")
         .accessibilityLabel("切换窗口尺寸")
+    }
+
+    private func sizeOption(_ size: PlayerSize) -> some View {
+        Button {
+            model.setSize(size)
+        } label: {
+            if model.playerSize == size {
+                Label(size.title, systemImage: "checkmark")
+            } else {
+                Text(size.title)
+            }
+        }
     }
 
     private var mediumContent: some View {
@@ -239,7 +243,7 @@ struct PlayerView: View {
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             .contextMenu {
                 ForEach(PlayerSize.allCases) { size in
-                    Button(size.title) { model.setSize(size) }
+                    sizeOption(size)
                 }
                 Button("打开 Podcasts", action: model.openPodcasts)
             }
