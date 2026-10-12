@@ -86,6 +86,8 @@ struct PlayerView: View {
             ForEach(PlayerSize.allCases) { size in
                 sizeOption(size)
             }
+            Divider()
+            quitMenuItem
         } label: {
             Image(systemName: "gearshape")
                 .font(.system(size: 12, weight: .semibold))
@@ -111,6 +113,10 @@ struct PlayerView: View {
                 Text(size.title)
             }
         }
+    }
+
+    private var quitMenuItem: some View {
+        Button("退出") { NSApp.terminate(nil) }
     }
 
     private var mediumContent: some View {
@@ -254,6 +260,8 @@ struct PlayerView: View {
                     sizeOption(size)
                 }
                 Button("打开 Podcasts", action: model.openPodcasts)
+                Divider()
+                quitMenuItem
             }
             .onContinuousHover { phase in
                 switch phase {
