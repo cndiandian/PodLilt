@@ -99,8 +99,8 @@ struct PlayerView: View {
         .frame(width: 26, height: 26)
         .environment(\.colorScheme, .dark)
         .foregroundStyle(Palette.muted)
-        .help("切换窗口尺寸")
-        .accessibilityLabel("切换窗口尺寸")
+        .help("切换窗口模式")
+        .accessibilityLabel("切换窗口模式")
     }
 
     private func sizeOption(_ size: PlayerSize) -> some View {

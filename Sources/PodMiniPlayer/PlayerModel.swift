@@ -10,9 +10,9 @@ enum PlayerSize: String, CaseIterable, Hashable, Identifiable {
 
     var title: String {
         switch self {
-        case .large: "大尺寸"
-        case .medium: "中尺寸"
-        case .small: "小尺寸"
+        case .large: "完整模式"
+        case .medium: "紧凑模式"
+        case .small: "封面模式"
         }
     }
 

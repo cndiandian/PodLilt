@@ -96,7 +96,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             sizeMenu.addItem(entry)
             sizeItems.append(entry)
         }
-        let sizeItem = NSMenuItem(title: "窗口尺寸", action: nil, keyEquivalent: "")
+        let sizeItem = NSMenuItem(title: "窗口模式", action: nil, keyEquivalent: "")
         sizeItem.submenu = sizeMenu
         menu.addItem(sizeItem)
         menu.addItem(.separator())
