@@ -472,30 +472,3 @@ private struct ScrollingTitle: View {
         return -min(CGFloat(elapsed) * speed, distance)
     }
 }
-
-struct PlayerSettingsView: View {
-    @ObservedObject var model: PlayerModel
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("窗口尺寸")
-                .font(.system(size: 16, weight: .semibold))
-            Picker("窗口尺寸", selection: Binding(
-                get: { model.playerSize },
-                set: { model.setSize($0) }
-            )) {
-                ForEach(PlayerSize.allCases) { size in
-                    Text(size.title).tag(size)
-                }
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            Text("大尺寸显示完整播放器；中尺寸保留全部控制；小尺寸只显示封面，悬停时可播放或暂停。")
-                .font(.system(size: 12))
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .padding(24)
-        .frame(width: 360)
-    }
-}

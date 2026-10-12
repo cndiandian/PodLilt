@@ -2,11 +2,14 @@ import AppKit
 import SwiftUI
 
 @main
-struct PodMiniPlayerApp: App {
-    @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
+@MainActor
+enum PodMiniPlayerApp {
+    private static let delegate = AppDelegate()
 
-    var body: some Scene {
-        Settings { PlayerSettingsView(model: delegate.model) }
+    static func main() {
+        let application = NSApplication.shared
+        application.delegate = delegate
+        application.run()
     }
 }
 
