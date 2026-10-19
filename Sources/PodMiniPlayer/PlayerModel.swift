@@ -83,10 +83,21 @@ final class PlayerModel: ObservableObject {
                         }
                     }
                 }
+            case .otherPlayerActive:
+                if let snapshot {
+                    self.snapshot = snapshot.cached(at: Date())
+                    state = .ready
+                } else {
+                    state = .empty
+                }
             case .permissionNeeded:
-                snapshot = nil
-                catalog = nil
-                state = .permission
+                if let snapshot {
+                    self.snapshot = snapshot.cached(at: Date())
+                    state = .ready
+                } else {
+                    catalog = nil
+                    state = .permission
+                }
             case .noPlayback:
                 snapshot = nil
                 catalog = nil
@@ -103,6 +114,10 @@ final class PlayerModel: ObservableObject {
 
     func perform(_ action: PlaybackAction) {
         guard let snapshot else { return }
+        if snapshot.requiresAccessibilityControl, !AXIsProcessTrusted() {
+            commandFailed = true
+            return
+        }
         Task {
             let didPerform = await Task.detached(priority: .userInitiated) {
                 PlaybackProbe.perform(action, snapshot: snapshot)
@@ -110,6 +125,10 @@ final class PlayerModel: ObservableObject {
             commandFailed = !didPerform
             if didPerform { refresh() }
         }
+    }
+
+    func dismissCommandFailure() {
+        commandFailed = false
     }
 
     func openPodcasts() {

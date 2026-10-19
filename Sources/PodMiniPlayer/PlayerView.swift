@@ -15,13 +15,28 @@ struct PlayerView: View {
     @State private var hoveringSmallArtwork = false
 
     var body: some View {
-        if #available(macOS 15.0, *) {
-            playerBody
-                .gesture(WindowDragGesture())
-                .allowsWindowActivationEvents()
-        } else {
-            playerBody
+        Group {
+            if #available(macOS 15.0, *) {
+                playerBody
+                    .gesture(WindowDragGesture())
+                    .allowsWindowActivationEvents()
+            } else {
+                playerBody
+            }
         }
+        .alert("当前无法控制 Podcasts", isPresented: commandFailureBinding) {
+            Button("打开 Podcasts") { model.openPodcasts() }
+            Button("知道了", role: .cancel) {}
+        } message: {
+            Text("因系统权限限制，PodLilt 暂时无法控制 Podcasts。请打开 Podcasts，手动暂停并重新播放一次后再试。")
+        }
+    }
+
+    private var commandFailureBinding: Binding<Bool> {
+        Binding(
+            get: { model.commandFailed },
+            set: { if !$0 { model.dismissCommandFailure() } }
+        )
     }
 
     private var playerBody: some View {
@@ -299,11 +314,6 @@ struct PlayerView: View {
                 progress(at: context.date)
             }
             controls
-            if model.commandFailed {
-                Text("控制未生效，请检查辅助功能权限")
-                    .font(.system(size: 10))
-                    .foregroundStyle(.orange)
-            }
         }
         .padding(.top, 8)
     }

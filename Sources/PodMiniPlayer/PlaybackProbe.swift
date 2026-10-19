@@ -14,17 +14,40 @@ struct PlaybackSnapshot {
     let isPlaying: Bool
     let source: Source
 
-    enum Source { case mediaRemote, accessibility }
+    enum Source { case mediaRemote, accessibility, cached }
+
+    var requiresAccessibilityControl: Bool {
+        switch source {
+        case .mediaRemote: false
+        case .accessibility, .cached: true
+        }
+    }
 
     func position(at date: Date) -> TimeInterval? {
         guard let elapsed else { return nil }
         let estimate = elapsed + (isPlaying ? max(0, date.timeIntervalSince(capturedAt)) * max(0, playbackRate) : 0)
         return min(max(0, estimate), duration ?? estimate)
     }
+
+    func cached(at date: Date) -> PlaybackSnapshot {
+        PlaybackSnapshot(
+            title: title,
+            show: show,
+            artwork: artwork,
+            episodeID: episodeID,
+            duration: duration,
+            elapsed: position(at: date),
+            capturedAt: date,
+            playbackRate: playbackRate,
+            isPlaying: isPlaying,
+            source: .cached
+        )
+    }
 }
 
 enum ProbeResult {
     case playing(PlaybackSnapshot)
+    case otherPlayerActive
     case permissionNeeded
     case noPlayback
 }
@@ -33,10 +56,17 @@ enum PlaybackAction { case toggle, backward, forward }
 
 enum PlaybackProbe {
     static func fetch() -> ProbeResult {
-        if let snapshot = MediaRemoteProbe.fetch(), snapshot.title.isEmpty == false {
+        switch MediaRemoteProbe.fetch() {
+        case .podcasts(let snapshot):
             return .playing(snapshot)
+        case .otherPlayer:
+            if case .playing(let snapshot) = AccessibilityProbe.fetch() {
+                return .playing(snapshot)
+            }
+            return .otherPlayerActive
+        case .unavailable:
+            return AccessibilityProbe.fetch()
         }
-        return AccessibilityProbe.fetch()
     }
 
     static func perform(_ action: PlaybackAction, snapshot: PlaybackSnapshot) -> Bool {
@@ -47,6 +77,12 @@ enum PlaybackProbe {
 }
 
 private enum MediaRemoteProbe {
+    enum FetchResult {
+        case podcasts(PlaybackSnapshot)
+        case otherPlayer
+        case unavailable
+    }
+
     private static var resources: URL? { Bundle.main.resourceURL }
 
     private static func run(_ arguments: [String]) -> Data? {
@@ -72,13 +108,16 @@ private enum MediaRemoteProbe {
         }
     }
 
-    static func fetch() -> PlaybackSnapshot? {
-        guard let data = run(["get", "--now"]),
-              let raw = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              raw["bundleIdentifier"] as? String == "com.apple.podcasts",
-              let title = raw["title"] as? String, !title.isEmpty else { return nil }
+    static func fetch() -> FetchResult {
+        guard let data = run(["get", "--now", "--allow-missing-title"]),
+              let raw = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        else { return .unavailable }
+        guard raw["bundleIdentifier"] as? String == "com.apple.podcasts" else {
+            return .otherPlayer
+        }
+        guard let title = raw["title"] as? String, !title.isEmpty else { return .unavailable }
         let artwork = (raw["artworkData"] as? String).flatMap { Data(base64Encoded: $0) }
-        return PlaybackSnapshot(
+        return .podcasts(PlaybackSnapshot(
             title: title,
             show: (raw["artist"] as? String) ?? (raw["album"] as? String),
             artwork: artwork,
@@ -90,7 +129,7 @@ private enum MediaRemoteProbe {
             playbackRate: (raw["playbackRate"] as? NSNumber)?.doubleValue ?? 1,
             isPlaying: (raw["playing"] as? Bool) ?? false,
             source: .mediaRemote
-        )
+        ))
     }
 
     static func perform(_ action: PlaybackAction, snapshot: PlaybackSnapshot) -> Bool {
