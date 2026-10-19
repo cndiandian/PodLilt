@@ -16,7 +16,9 @@ struct PlayerView: View {
 
     var body: some View {
         if #available(macOS 15.0, *) {
-            playerBody.gesture(WindowDragGesture())
+            playerBody
+                .gesture(WindowDragGesture())
+                .allowsWindowActivationEvents()
         } else {
             playerBody
         }
