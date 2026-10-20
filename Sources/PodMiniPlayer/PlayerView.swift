@@ -104,6 +104,8 @@ struct PlayerView: View {
                 sizeOption(size)
             }
             Divider()
+            Button("关于") { (NSApp.delegate as? AppDelegate)?.showAbout() }
+            Divider()
             quitMenuItem
         } label: {
             Image(systemName: "gearshape")
@@ -277,6 +279,8 @@ struct PlayerView: View {
                     sizeOption(size)
                 }
                 Button("打开 Podcasts", action: model.openPodcasts)
+                Divider()
+                Button("关于") { (NSApp.delegate as? AppDelegate)?.showAbout() }
                 Divider()
                 quitMenuItem
             }

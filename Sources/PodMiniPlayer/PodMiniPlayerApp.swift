@@ -17,6 +17,7 @@ enum PodMiniPlayerApp {
 final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     let model = PlayerModel()
     private var panel: PlayerPanel?
+    private var aboutWindow: NSWindow?
     private var statusItem: NSStatusItem?
     private var sizeItems = [NSMenuItem]()
     private var moveTimer: Timer?
@@ -99,6 +100,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         let sizeItem = NSMenuItem(title: "窗口模式", action: nil, keyEquivalent: "")
         sizeItem.submenu = sizeMenu
         menu.addItem(sizeItem)
+        menu.addItem(.separator())
+        menu.addItem(NSMenuItem(title: "关于", action: #selector(showAbout), keyEquivalent: ""))
         menu.addItem(.separator())
         menu.addItem(NSMenuItem(title: "退出", action: #selector(quit), keyEquivalent: "q"))
         menu.items.forEach { $0.target = self }
@@ -190,6 +193,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         let x = max(0, max(screen.minX - window.midX, window.midX - screen.maxX))
         let y = max(0, max(screen.minY - window.midY, window.midY - screen.maxY))
         return x * x + y * y
+    }
+
+    @objc func showAbout() {
+        if aboutWindow == nil {
+            let window = NSWindow(
+                contentRect: NSRect(origin: .zero, size: NSSize(width: 420, height: 310)),
+                styleMask: [.titled, .closable],
+                backing: .buffered,
+                defer: false
+            )
+            window.title = "关于 PodLilt"
+            window.isReleasedWhenClosed = false
+            window.center()
+            window.contentView = NSHostingView(rootView: AboutView())
+            aboutWindow = window
+        }
+        NSApp.activate(ignoringOtherApps: true)
+        aboutWindow?.makeKeyAndOrderFront(nil)
     }
 
     @objc private func openPodcasts() { model.openPodcasts() }
