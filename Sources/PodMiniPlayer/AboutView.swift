@@ -2,6 +2,7 @@ import AppKit
 import SwiftUI
 
 struct AboutView: View {
+    @ObservedObject var model: PlayerModel
     private let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "—"
 
     var body: some View {
@@ -14,16 +15,16 @@ struct AboutView: View {
             VStack(spacing: 5) {
                 Text("PodLilt")
                     .font(.system(size: 22, weight: .semibold, design: .rounded))
-                Text("版本号：\(version)")
+                Text("\(model.text(.version)) \(version)")
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
             }
 
             Grid(alignment: .leading, horizontalSpacing: 14, verticalSpacing: 9) {
-                infoRow("APP名称：", value: "PodLilt")
-                linkRow("反馈：", title: "support@podlilt.com", url: "mailto:support@podlilt.com")
-                linkRow("Twitter（X）：", title: "@callmediandian", url: "https://x.com/callmediandian")
-                linkRow("GitHub：", title: "https://github.com/cndiandian/PodLilt", url: "https://github.com/cndiandian/PodLilt")
+                infoRow(model.text(.appName), value: "PodLilt")
+                linkRow(model.text(.feedback), title: "support@podlilt.com", url: "mailto:support@podlilt.com")
+                linkRow(model.text(.twitter), title: "@callmediandian", url: "https://x.com/callmediandian")
+                linkRow(model.text(.github), title: "https://github.com/cndiandian/PodLilt", url: "https://github.com/cndiandian/PodLilt")
             }
             .font(.system(size: 12))
 

@@ -8,11 +8,11 @@ enum PlayerSize: String, CaseIterable, Hashable, Identifiable {
 
     var id: String { rawValue }
 
-    var title: String {
+    var titleKey: L10nKey {
         switch self {
-        case .large: "完整模式"
-        case .medium: "紧凑模式"
-        case .small: "封面模式"
+        case .large: .fullMode
+        case .medium: .compactMode
+        case .small: .coverMode
         }
     }
 
@@ -29,8 +29,9 @@ enum PlayerSize: String, CaseIterable, Hashable, Identifiable {
 final class PlayerModel: ObservableObject {
     enum DisplayState { case loading, permission, empty, ready }
 
-    @Published private(set) var playerSize: PlayerSize =
-        PlayerSize(rawValue: UserDefaults.standard.string(forKey: "playerSize") ?? "") ?? .large
+    @Published private(set) var playerSize: PlayerSize
+    @Published private(set) var languagePreference: LanguagePreference
+    @Published private(set) var language: AppLanguage
     @Published private(set) var state: DisplayState = .loading
     @Published private(set) var snapshot: PlaybackSnapshot?
     @Published private(set) var catalog: CatalogMetadata?
@@ -40,12 +41,41 @@ final class PlayerModel: ObservableObject {
     private var fetching = false
     private var catalogTitle: String?
     var onSizeChanged: ((PlayerSize) -> Void)?
+    var onLanguageChanged: (() -> Void)?
+
+    init() {
+        let defaults = UserDefaults.standard
+        playerSize = PlayerSize(rawValue: defaults.string(forKey: "playerSize") ?? "") ?? .large
+        let preference = LanguagePreference(rawValue: defaults.string(forKey: "languagePreference") ?? "") ?? .system
+        languagePreference = preference
+        language = preference.resolvedLanguage
+    }
 
     func setSize(_ size: PlayerSize) {
         guard playerSize != size else { return }
         playerSize = size
         UserDefaults.standard.set(size.rawValue, forKey: "playerSize")
         onSizeChanged?(size)
+    }
+
+    func setLanguage(_ preference: LanguagePreference) {
+        guard languagePreference != preference else { return }
+        languagePreference = preference
+        language = preference.resolvedLanguage
+        UserDefaults.standard.set(preference.rawValue, forKey: "languagePreference")
+        onLanguageChanged?()
+    }
+
+    func refreshSystemLanguage() {
+        guard languagePreference == .system else { return }
+        let preferred = LanguagePreference.system.resolvedLanguage
+        guard language != preferred else { return }
+        language = preferred
+        onLanguageChanged?()
+    }
+
+    func text(_ key: L10nKey) -> String {
+        L10n.text(key, language: language)
     }
 
     func start() {

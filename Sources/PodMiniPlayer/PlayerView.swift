@@ -24,11 +24,11 @@ struct PlayerView: View {
                 playerBody
             }
         }
-        .alert("当前无法控制 Podcasts", isPresented: commandFailureBinding) {
-            Button("打开 Podcasts") { model.openPodcasts() }
-            Button("知道了", role: .cancel) {}
+        .alert(model.text(.currentControlUnavailable), isPresented: commandFailureBinding) {
+            Button(model.text(.openPodcasts)) { model.openPodcasts() }
+            Button(model.text(.ok), role: .cancel) {}
         } message: {
-            Text("因系统权限限制，PodLilt 暂时无法控制 Podcasts。请打开 Podcasts，手动暂停并重新播放一次后再试。")
+            Text(model.text(.controlUnavailableMessage))
         }
     }
 
@@ -66,8 +66,8 @@ struct PlayerView: View {
             Group {
                 switch model.state {
                 case .ready: playerContent
-                case .loading: message(symbol: "waveform", title: "正在连接 Podcasts", detail: "读取当前播放内容…")
-                case .empty: message(symbol: "waveform", title: "还没有播放内容", detail: "在 Podcasts 中播放一集，内容会出现在这里。")
+                case .loading: message(symbol: "waveform", title: model.text(.connecting), detail: model.text(.readingPlayback))
+                case .empty: message(symbol: "waveform", title: model.text(.emptyTitle), detail: model.text(.emptyDetail))
                 case .permission: permissionContent
                 }
             }
@@ -92,8 +92,8 @@ struct PlayerView: View {
             }
             .buttonStyle(.plain)
             .foregroundStyle(Palette.muted)
-            .help("打开 Podcasts")
-            .accessibilityLabel("打开 Podcasts")
+            .help(model.text(.openPodcasts))
+            .accessibilityLabel(model.text(.openPodcasts))
         }
         .frame(height: 26)
     }
@@ -104,7 +104,9 @@ struct PlayerView: View {
                 sizeOption(size)
             }
             Divider()
-            Button("关于") { (NSApp.delegate as? AppDelegate)?.showAbout() }
+            languageMenu
+            Divider()
+            Button(model.text(.about)) { (NSApp.delegate as? AppDelegate)?.showAbout() }
             Divider()
             quitMenuItem
         } label: {
@@ -118,8 +120,8 @@ struct PlayerView: View {
         .frame(width: 26, height: 26)
         .environment(\.colorScheme, .dark)
         .foregroundStyle(Palette.muted)
-        .help("切换窗口模式")
-        .accessibilityLabel("切换窗口模式")
+        .help(model.text(.settings))
+        .accessibilityLabel(model.text(.settings))
     }
 
     private func sizeOption(_ size: PlayerSize) -> some View {
@@ -127,15 +129,31 @@ struct PlayerView: View {
             model.setSize(size)
         } label: {
             if model.playerSize == size {
-                Label(size.title, systemImage: "checkmark")
+                Label(model.text(size.titleKey), systemImage: "checkmark")
             } else {
-                Text(size.title)
+                Text(model.text(size.titleKey))
+            }
+        }
+    }
+
+    private var languageMenu: some View {
+        Menu(model.text(.language)) {
+            ForEach(LanguagePreference.allCases) { preference in
+                Button {
+                    model.setLanguage(preference)
+                } label: {
+                    if model.languagePreference == preference {
+                        Label(preference.title(using: model.language), systemImage: "checkmark")
+                    } else {
+                        Text(preference.title(using: model.language))
+                    }
+                }
             }
         }
     }
 
     private var quitMenuItem: some View {
-        Button("退出") { NSApp.terminate(nil) }
+        Button(model.text(.quit)) { NSApp.terminate(nil) }
     }
 
     private var mediumContent: some View {
@@ -159,13 +177,13 @@ struct PlayerView: View {
                     }
                     .buttonStyle(.plain)
                     .foregroundStyle(Palette.muted)
-                    .help("打开 Podcasts")
+                    .help(model.text(.openPodcasts))
                 }
                 HStack(spacing: 1) {
-                    compactControl("gobackward.15", label: "后退 15 秒", action: .backward)
+                    compactControl("gobackward.15", label: model.text(.back15), action: .backward)
                     compactControl(model.snapshot?.isPlaying == true ? "pause.fill" : "play.fill",
-                                   label: model.snapshot?.isPlaying == true ? "暂停" : "播放", action: .toggle)
-                    compactControl("goforward.30", label: "前进 30 秒", action: .forward)
+                                   label: model.text(model.snapshot?.isPlaying == true ? .pause : .play), action: .toggle)
+                    compactControl("goforward.30", label: model.text(.forward30), action: .forward)
                 }
                 .disabled(model.state != .ready)
             }
@@ -188,17 +206,17 @@ struct PlayerView: View {
 
     private var mediumMessage: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(model.state == .permission ? "需要辅助功能权限" :
-                 model.state == .loading ? "正在连接 Podcasts" : "还没有播放内容")
+            Text(model.state == .permission ? model.text(.accessibilityRequired) :
+                 model.state == .loading ? model.text(.connecting) : model.text(.emptyTitle))
                 .font(.system(size: 11, weight: .semibold))
                 .lineLimit(1)
             if model.state == .permission {
-                Button("开启权限", action: model.requestAccessibility)
+                Button(model.text(.enablePermission), action: model.requestAccessibility)
                     .font(.system(size: 10, weight: .medium))
                     .buttonStyle(.plain)
                     .foregroundStyle(Palette.accent)
             } else {
-                Text("打开 Podcasts 播放一集")
+                Text(model.text(.openAndPlay))
                     .font(.system(size: 10))
                     .foregroundStyle(Palette.muted)
                     .lineLimit(1)
@@ -228,8 +246,8 @@ struct PlayerView: View {
             .foregroundStyle(Palette.muted)
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("播放进度")
-        .accessibilityValue(position.map(formatTime) ?? "未知")
+        .accessibilityLabel(model.text(.playbackProgress))
+        .accessibilityValue(position.map(formatTime) ?? model.text(.unknown))
     }
 
     private func compactControl(_ symbol: String, label: String, action: PlaybackAction) -> some View {
@@ -246,23 +264,23 @@ struct PlayerView: View {
 
     private var smallContent: some View {
         artwork(side: 96, cornerRadius: 16, showsBorder: false)
-            .accessibilityValue(model.snapshot?.isPlaying == true ? "正在播放" : "已暂停")
+            .accessibilityValue(model.text(model.snapshot?.isPlaying == true ? .playing : .notPlaying))
             .overlay {
                 if hoveringSmallArtwork, model.state == .ready {
                     ZStack {
                         Color.black.opacity(0.42)
                         smallControl(
                             model.snapshot?.isPlaying == true ? "pause.fill" : "play.fill",
-                            label: model.snapshot?.isPlaying == true ? "暂停" : "播放",
+                            label: model.text(model.snapshot?.isPlaying == true ? .pause : .play),
                             action: .toggle,
                             isPrimary: true
                         )
                         VStack {
                             Spacer()
                             HStack {
-                                smallControl("gobackward.15", label: "后退 15 秒", action: .backward)
+                                smallControl("gobackward.15", label: model.text(.back15), action: .backward)
                                 Spacer()
-                                smallControl("goforward.30", label: "前进 30 秒", action: .forward)
+                                smallControl("goforward.30", label: model.text(.forward30), action: .forward)
                             }
                             .padding(.horizontal, 7)
                             .padding(.bottom, 7)
@@ -286,9 +304,11 @@ struct PlayerView: View {
                 ForEach(PlayerSize.allCases) { size in
                     sizeOption(size)
                 }
-                Button("打开 Podcasts", action: model.openPodcasts)
                 Divider()
-                Button("关于") { (NSApp.delegate as? AppDelegate)?.showAbout() }
+                languageMenu
+                Button(model.text(.openPodcasts), action: model.openPodcasts)
+                Divider()
+                Button(model.text(.about)) { (NSApp.delegate as? AppDelegate)?.showAbout() }
                 Divider()
                 quitMenuItem
             }
@@ -335,7 +355,7 @@ struct PlayerView: View {
                         Circle()
                             .fill(model.snapshot?.isPlaying == true ? Palette.accent : Palette.muted)
                             .frame(width: 5, height: 5)
-                        Text(model.snapshot?.isPlaying == true ? "正在播放" : "已暂停")
+                        Text(model.text(model.snapshot?.isPlaying == true ? .playing : .notPlaying))
                             .font(.system(size: 10, weight: .medium))
                             .foregroundStyle(Palette.muted)
                     }
@@ -372,7 +392,7 @@ struct PlayerView: View {
                     .stroke(Palette.line, lineWidth: 1)
             }
         }
-        .accessibilityLabel("节目封面")
+        .accessibilityLabel(model.text(.artwork))
     }
 
     private func progress(at date: Date) -> some View {
@@ -397,13 +417,13 @@ struct PlayerView: View {
             .foregroundStyle(Palette.muted)
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("播放进度")
-        .accessibilityValue(position.map(formatTime) ?? "未知")
+        .accessibilityLabel(model.text(.playbackProgress))
+        .accessibilityValue(position.map(formatTime) ?? model.text(.unknown))
     }
 
     private var controls: some View {
         HStack(spacing: 28) {
-            controlButton("gobackward.15", label: "后退 15 秒", action: .backward)
+            controlButton("gobackward.15", label: model.text(.back15), action: .backward)
             Button { model.perform(.toggle) } label: {
                 Image(systemName: model.snapshot?.isPlaying == true ? "pause.fill" : "play.fill")
                     .font(.system(size: 18, weight: .semibold))
@@ -413,8 +433,8 @@ struct PlayerView: View {
                     .foregroundStyle(Palette.background)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(model.snapshot?.isPlaying == true ? "暂停" : "播放")
-            controlButton("goforward.30", label: "前进 30 秒", action: .forward)
+            .accessibilityLabel(model.text(model.snapshot?.isPlaying == true ? .pause : .play))
+            controlButton("goforward.30", label: model.text(.forward30), action: .forward)
         }
         .frame(maxWidth: .infinity)
     }
@@ -437,13 +457,13 @@ struct PlayerView: View {
             Image(systemName: "hand.tap")
                 .font(.system(size: 25))
                 .foregroundStyle(Palette.accent)
-            Text("允许读取 Podcasts 控件")
+            Text(model.text(.accessibilityRequired))
                 .font(.system(size: 14, weight: .semibold))
-            Text("需要辅助功能权限来读取播放信息并控制播放。")
+            Text(model.text(.accessibilityDetail))
                 .font(.system(size: 11))
                 .foregroundStyle(Palette.muted)
                 .multilineTextAlignment(.center)
-            Button("开启辅助功能权限", action: model.requestAccessibility)
+            Button(model.text(.enableAccessibility), action: model.requestAccessibility)
                 .buttonStyle(.plain)
                 .font(.system(size: 11, weight: .semibold))
                 .padding(.horizontal, 13)

@@ -20,6 +20,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var aboutWindow: NSWindow?
     private var statusItem: NSStatusItem?
     private var sizeItems = [NSMenuItem]()
+    private var languageItems = [NSMenuItem]()
     private var moveTimer: Timer?
     private var isCorrectingPosition = false
     private let windowOriginKey = "playerWindowOrigin"
@@ -29,6 +30,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         makePanel()
         makeStatusItem()
         model.onSizeChanged = { [weak self] size in self?.applySize(size) }
+        model.onLanguageChanged = { [weak self] in self?.applyLanguage() }
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(systemLocaleDidChange),
+            name: NSLocale.currentLocaleDidChangeNotification,
+            object: nil
+        )
         model.start()
     }
 
@@ -84,12 +92,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         item.button?.image = NSImage(systemSymbolName: "waveform", accessibilityDescription: "PodLilt")
         item.button?.toolTip = "PodLilt"
+        statusItem = item
+        rebuildStatusMenu()
+    }
+
+    private func rebuildStatusMenu() {
+        guard let statusItem else { return }
+        sizeItems.removeAll()
+        languageItems.removeAll()
         let menu = NSMenu()
-        menu.addItem(NSMenuItem(title: "显示或隐藏播放器", action: #selector(togglePanel), keyEquivalent: ""))
-        menu.addItem(NSMenuItem(title: "打开 Podcasts", action: #selector(openPodcasts), keyEquivalent: ""))
+        menu.addItem(actionItem(title: model.text(.showHidePlayer), action: #selector(togglePanel)))
+        menu.addItem(actionItem(title: model.text(.openPodcasts), action: #selector(openPodcasts)))
         let sizeMenu = NSMenu()
         for (index, size) in PlayerSize.allCases.enumerated() {
-            let entry = NSMenuItem(title: size.title, action: #selector(selectSize(_:)), keyEquivalent: String(index + 1))
+            let entry = NSMenuItem(title: model.text(size.titleKey), action: #selector(selectSize(_:)), keyEquivalent: String(index + 1))
             entry.keyEquivalentModifierMask = [.command]
             entry.representedObject = size.rawValue
             entry.state = size == model.playerSize ? .on : .off
@@ -97,16 +113,37 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             sizeMenu.addItem(entry)
             sizeItems.append(entry)
         }
-        let sizeItem = NSMenuItem(title: "窗口模式", action: nil, keyEquivalent: "")
+        let sizeItem = NSMenuItem(title: model.text(.windowMode), action: nil, keyEquivalent: "")
         sizeItem.submenu = sizeMenu
         menu.addItem(sizeItem)
+
+        let languageMenu = NSMenu()
+        for preference in LanguagePreference.allCases {
+            let entry = NSMenuItem(
+                title: preference.title(using: model.language),
+                action: #selector(selectLanguage(_:)),
+                keyEquivalent: ""
+            )
+            entry.representedObject = preference.rawValue
+            entry.state = preference == model.languagePreference ? .on : .off
+            entry.target = self
+            languageMenu.addItem(entry)
+            languageItems.append(entry)
+        }
+        let languageItem = NSMenuItem(title: model.text(.language), action: nil, keyEquivalent: "")
+        languageItem.submenu = languageMenu
+        menu.addItem(languageItem)
         menu.addItem(.separator())
-        menu.addItem(NSMenuItem(title: "关于", action: #selector(showAbout), keyEquivalent: ""))
+        menu.addItem(actionItem(title: model.text(.about), action: #selector(showAbout)))
         menu.addItem(.separator())
-        menu.addItem(NSMenuItem(title: "退出", action: #selector(quit), keyEquivalent: "q"))
-        menu.items.forEach { $0.target = self }
-        item.menu = menu
-        statusItem = item
+        menu.addItem(actionItem(title: model.text(.quit), action: #selector(quit), keyEquivalent: "q"))
+        statusItem.menu = menu
+    }
+
+    private func actionItem(title: String, action: Selector, keyEquivalent: String = "") -> NSMenuItem {
+        let item = NSMenuItem(title: title, action: action, keyEquivalent: keyEquivalent)
+        item.target = self
+        return item
     }
 
     @objc private func togglePanel() {
@@ -119,6 +156,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         guard let rawValue = sender.representedObject as? String,
               let size = PlayerSize(rawValue: rawValue) else { return }
         model.setSize(size)
+    }
+
+    @objc private func selectLanguage(_ sender: NSMenuItem) {
+        guard let rawValue = sender.representedObject as? String,
+              let preference = LanguagePreference(rawValue: rawValue) else { return }
+        model.setLanguage(preference)
+    }
+
+    @objc private func systemLocaleDidChange() {
+        model.refreshSystemLanguage()
+    }
+
+    private func applyLanguage() {
+        rebuildStatusMenu()
+        aboutWindow?.title = model.text(.aboutPodLilt)
     }
 
     private func applySize(_ size: PlayerSize) {
@@ -203,10 +255,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
                 backing: .buffered,
                 defer: false
             )
-            window.title = "关于 PodLilt"
+            window.title = model.text(.aboutPodLilt)
             window.isReleasedWhenClosed = false
             window.center()
-            window.contentView = NSHostingView(rootView: AboutView())
+            window.contentView = NSHostingView(rootView: AboutView(model: model))
             aboutWindow = window
         }
         NSApp.activate(ignoringOtherApps: true)

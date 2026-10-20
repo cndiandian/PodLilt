@@ -210,6 +210,8 @@ private enum AccessibilityProbe {
             let controlLabel = string(control, kAXDescriptionAttribute) ?? ""
             let isPlaying = controlLabel.localizedCaseInsensitiveContains("pause")
                 || controlLabel.contains("暂停")
+                || controlLabel.contains("暫停")
+                || controlLabel.contains("一時停止")
             let slider = matching("podcasts.miniPlayer.playbackSlider", in: player)
             let sliderValue = slider.flatMap { number($0, kAXValueAttribute) }
             let sliderMin = slider.flatMap { number($0, kAXMinValueAttribute) } ?? 0
@@ -233,7 +235,7 @@ private enum AccessibilityProbe {
 
             var elapsed: TimeInterval?
             if let sliderValue, let sliderMax, sliderMax > sliderMin,
-               !(sliderValue == 0 && (slider.flatMap { string($0, kAXValueDescriptionAttribute) } ?? "").localizedCaseInsensitiveContains("not playing")) {
+               !(sliderValue == 0 && isNotPlayingDescription(slider.flatMap { string($0, kAXValueDescriptionAttribute) } ?? "")) {
                 if sliderMax > 1 { elapsed = sliderValue }
                 else if let duration { elapsed = (sliderValue - sliderMin) / (sliderMax - sliderMin) * duration }
             }
@@ -252,6 +254,13 @@ private enum AccessibilityProbe {
             ))
         }
         return .noPlayback
+    }
+
+    private static func isNotPlayingDescription(_ description: String) -> Bool {
+        description.localizedCaseInsensitiveContains("not playing")
+            || description.contains("未播放")
+            || description.contains("未再生")
+            || description.contains("再生していません")
     }
 
     static func press(_ action: PlaybackAction) -> Bool {
