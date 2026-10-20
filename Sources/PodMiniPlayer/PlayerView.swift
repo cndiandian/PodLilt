@@ -251,14 +251,22 @@ struct PlayerView: View {
                 if hoveringSmallArtwork, model.state == .ready {
                     ZStack {
                         Color.black.opacity(0.42)
-                        Button { model.perform(.toggle) } label: {
-                            Image(systemName: model.snapshot?.isPlaying == true ? "pause.fill" : "play.fill")
-                                .font(.system(size: 23, weight: .semibold))
-                                .frame(width: 46, height: 46)
-                                .background(.black.opacity(0.65), in: Circle())
+                        smallControl(
+                            model.snapshot?.isPlaying == true ? "pause.fill" : "play.fill",
+                            label: model.snapshot?.isPlaying == true ? "暂停" : "播放",
+                            action: .toggle,
+                            isPrimary: true
+                        )
+                        VStack {
+                            Spacer()
+                            HStack {
+                                smallControl("gobackward.15", label: "后退 15 秒", action: .backward)
+                                Spacer()
+                                smallControl("goforward.30", label: "前进 30 秒", action: .forward)
+                            }
+                            .padding(.horizontal, 7)
+                            .padding(.bottom, 7)
                         }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel(model.snapshot?.isPlaying == true ? "暂停" : "播放")
                     }
                     .transition(.opacity)
                 }
@@ -290,6 +298,25 @@ struct PlayerView: View {
                 case .ended: hoveringSmallArtwork = false
                 }
             }
+    }
+
+    private func smallControl(
+        _ symbol: String,
+        label: String,
+        action: PlaybackAction,
+        isPrimary: Bool = false
+    ) -> some View {
+        Button { model.perform(action) } label: {
+            Image(systemName: symbol)
+                .font(.system(size: isPrimary ? 23 : 14, weight: .semibold))
+                .frame(width: isPrimary ? 46 : 16, height: isPrimary ? 46 : 16)
+                .background(.black.opacity(0.68), in: Circle())
+                .frame(width: isPrimary ? 46 : 26, height: isPrimary ? 46 : 26)
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .help(label)
+        .accessibilityLabel(label)
     }
 
     private var playerContent: some View {
