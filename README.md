@@ -28,4 +28,4 @@ open "dist/PodLilt.app"
 
 ## 说明
 
-这是自用原型。`Vendor/MediaRemoteAdapter` 使用 [MediaRemote Adapter](https://github.com/ungive/mediaremote-adapter) 的 BSD 3-Clause 授权，协议文本保留在其目录和 app 包内。它依赖未公开的 macOS 接口，不适合作为 Mac App Store 版本的基础。Podcasts 的辅助功能控件结构也可能随 macOS 更新变化。
+`Vendor/MediaRemoteAdapter` 使用 [MediaRemote Adapter](https://github.com/ungive/mediaremote-adapter) 的 BSD 3-Clause 授权，协议文本保留在其目录和 app 包内。它依赖未公开的 macOS 接口，不适合作为 Mac App Store 版本的基础。Podcasts 的辅助功能控件结构也可能随 macOS 更新变化。
