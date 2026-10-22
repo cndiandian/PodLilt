@@ -3,8 +3,8 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleDevelopmentRegion</key><string>zh_CN</string>
-    <key>CFBundleExecutable</key><string>PodMiniPlayer</string>
-    <key>CFBundleIdentifier</key><string>com.example.pod-mini-player</string>
+    <key>CFBundleExecutable</key><string>PodLilt</string>
+    <key>CFBundleIdentifier</key><string>com.podlilt.player</string>
     <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
     <key>CFBundleName</key><string>PodLilt</string>
     <key>CFBundleDisplayName</key><string>PodLilt</string>

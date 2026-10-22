@@ -31,12 +31,13 @@ mkdir -p "$framework_dir"
   Vendor/MediaRemoteAdapter/src/test/*.m \
   -o "$adapter_dir/MediaRemoteAdapterTestClient"
 
-/usr/bin/xcrun swift build -c release --product PodMiniPlayer \
+/usr/bin/xcrun swift build -c release --product PodLilt \
   --disable-sandbox --manifest-cache local --cache-path "$project_dir/.build/cache/swiftpm"
 
 app_dir="$project_dir/dist/PodLilt.app"
 mkdir -p "$app_dir/Contents/MacOS" "$app_dir/Contents/Resources"
-cp "$project_dir/.build/release/PodMiniPlayer" "$app_dir/Contents/MacOS/PodMiniPlayer"
+rm -f "$app_dir/Contents/MacOS/PodMiniPlayer"
+cp "$project_dir/.build/release/PodLilt" "$app_dir/Contents/MacOS/PodLilt"
 cp "$project_dir/AppInfo.plist" "$app_dir/Contents/Info.plist"
 icon_source="$project_dir/Resources/AppIcon.png"
 iconset_dir="$project_dir/.build/AppIcon.iconset"

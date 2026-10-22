@@ -79,7 +79,7 @@ struct PlayerView: View {
     private var header: some View {
         HStack(spacing: 7) {
             Circle().fill(Palette.accent).frame(width: 6, height: 6)
-            Text("PODCASTS")
+            Text("PodLilt")
                 .font(.system(size: 10, weight: .bold, design: .rounded))
                 .tracking(1.6)
                 .foregroundStyle(Palette.muted)

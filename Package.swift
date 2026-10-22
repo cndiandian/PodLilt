@@ -2,13 +2,13 @@
 import PackageDescription
 
 let package = Package(
-    name: "PodMiniPlayer",
+    name: "PodLilt",
     platforms: [.macOS(.v14)],
-    products: [.executable(name: "PodMiniPlayer", targets: ["PodMiniPlayer"])],
+    products: [.executable(name: "PodLilt", targets: ["PodLilt"])],
     targets: [
         .executableTarget(
-            name: "PodMiniPlayer",
-            path: "Sources/PodMiniPlayer"
+            name: "PodLilt",
+            path: "Sources/PodLilt"
         )
     ]
 )

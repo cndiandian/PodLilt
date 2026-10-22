@@ -3,7 +3,7 @@ import SwiftUI
 
 @main
 @MainActor
-enum PodMiniPlayerApp {
+enum PodLiltApp {
     private static let delegate = AppDelegate()
 
     static func main() {
