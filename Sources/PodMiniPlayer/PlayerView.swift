@@ -285,6 +285,12 @@ struct PlayerView: View {
                             .padding(.horizontal, 7)
                             .padding(.bottom, 7)
                         }
+                        VStack {
+                            Spacer()
+                            TimelineView(.periodic(from: .now, by: 1)) { context in
+                                smallProgress(at: context.date)
+                            }
+                        }
                     }
                     .transition(.opacity)
                 }
@@ -318,6 +324,22 @@ struct PlayerView: View {
                 case .ended: hoveringSmallArtwork = false
                 }
             }
+    }
+
+    private func smallProgress(at date: Date) -> some View {
+        let position = model.position(at: date)
+        let duration = model.duration
+        let fraction = (position != nil && duration != nil && duration! > 0)
+            ? min(1, max(0, position! / duration!)) : 0
+        return GeometryReader { geometry in
+            Rectangle()
+                .fill(.white)
+                .frame(width: geometry.size.width * fraction)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .frame(height: 2)
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 
     private func smallControl(
