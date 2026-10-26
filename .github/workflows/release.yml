@@ -71,6 +71,13 @@ jobs:
             --generate-notes \
             --title "PodLilt ${GITHUB_REF_NAME}"
 
+      - name: Update Homebrew tap
+        env:
+          GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          ruby scripts/update-homebrew-tap.rb "$VERSION" "dist/PodLilt-v${VERSION}.dmg"
+
       - name: Clean up signing material
         if: always()
         run: |

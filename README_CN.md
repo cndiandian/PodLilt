@@ -32,6 +32,19 @@ PodLilt 是一款轻量的 macOS 悬浮播客播放器，用于展示和控制 *
 
 请前往 [GitHub Releases](https://github.com/cndiandian/PodLilt/releases) 下载最新版本。分发的应用已使用 Developer ID 证书签名并通过 Apple 公证。
 
+通过 Homebrew 安装（首次自动更新 tap 的版本发布后可用）：
+
+```sh
+brew install --cask cndiandian/tap/podlilt
+```
+
+更新已通过 Homebrew 安装的版本：
+
+```sh
+brew update
+brew upgrade --cask cndiandian/tap/podlilt
+```
+
 ## 系统要求
 
 - macOS 14.0 或更高版本
@@ -66,6 +79,8 @@ git push origin v0.1.0
 ```
 
 工作流会将签名并公证的 `PodLilt-vX.Y.Z.dmg`、ZIP 压缩包和对应的 SHA-256 校验文件添加到 Release。发布凭据保存在 GitHub Actions 加密的 Repository secrets 中。
+
+发布成功后，工作流会在 `cndiandian/homebrew-tap` 中自动创建或更新 `Casks/podlilt.rb`，同步版本号与 DMG 校验值，tap 初始为空也可以。在 **PodLilt** 仓库中添加 `HOMEBREW_TAP_TOKEN` Repository secret，使用仅授权 **homebrew-tap** 仓库、具有 **Contents: Read and write** 权限的 fine-grained personal access token。后续发布需保持令牌有效；默认的 `GITHUB_TOKEN` 无法写入其他仓库。
 
 ## 辅助功能权限
 

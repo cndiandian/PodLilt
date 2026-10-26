@@ -32,6 +32,19 @@ PodLilt is a lightweight floating podcast player for macOS that displays and con
 
 Download the latest notarized build from [GitHub Releases](https://github.com/cndiandian/PodLilt/releases). The distributed app is signed with a Developer ID certificate and notarized by Apple.
 
+Install with Homebrew (available after the first release that updates the tap):
+
+```sh
+brew install --cask cndiandian/tap/podlilt
+```
+
+Update an existing Homebrew installation:
+
+```sh
+brew update
+brew upgrade --cask cndiandian/tap/podlilt
+```
+
 ## Requirements
 
 - macOS 14.0 or later
@@ -66,6 +79,8 @@ git push origin v0.1.0
 ```
 
 The workflow attaches signed and notarized `PodLilt-vX.Y.Z.dmg`, a ZIP archive, and their SHA-256 checksums to the release. Release credentials are stored as encrypted GitHub Actions repository secrets.
+
+After publishing, it creates or updates `Casks/podlilt.rb` in `cndiandian/homebrew-tap` with the released version and DMG checksum. Configure the `HOMEBREW_TAP_TOKEN` repository secret in **PodLilt** using a fine-grained personal access token scoped to **homebrew-tap**, with **Contents: Read and write**. The tap can initially be empty. Keep this token valid for subsequent releases; the default `GITHUB_TOKEN` cannot write to another repository.
 
 ## Accessibility Permission
 
