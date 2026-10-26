@@ -27,6 +27,10 @@ PodLilt is a lightweight floating podcast player for macOS that displays and con
 | Compact Mode | 360 × 80 | Keeps complete playback information and controls in a single-row layout. |
 | Cover Mode | 96 × 96 | Shows only the artwork by default; hovering reveals play, skip, and progress controls. |
 
+## Download
+
+Download the latest notarized build from [GitHub Releases](https://github.com/cndiandian/PodLilt/releases). The distributed app is signed with a Developer ID certificate and notarized by Apple.
+
 ## Requirements
 
 - macOS 14.0 or later
@@ -50,6 +54,17 @@ The build script will:
 4. Apply a local ad-hoc signature to the final application.
 
 If Xcode has not completed its initial setup or its updated license has not been accepted, follow the instructions shown in Terminal before running the build script again.
+
+## Release
+
+Pushing a semantic version tag automatically builds, signs, notarizes, and publishes a GitHub Release:
+
+```sh
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+The workflow attaches `PodLilt-vX.Y.Z.zip` and its SHA-256 checksum to the release. Release credentials are stored as encrypted GitHub Actions repository secrets.
 
 ## Accessibility Permission
 
@@ -80,7 +95,8 @@ PodLilt
 ├── Resources                # Application icon resources
 ├── Vendor                   # MediaRemote Adapter
 ├── assets                   # README image assets
-├── scripts/build.sh         # Build and packaging script
+├── scripts                  # Build and release scripts
+├── .github/workflows        # Automated notarized releases
 ├── AppInfo.plist            # macOS application configuration
 └── Package.swift            # Swift Package configuration
 ```

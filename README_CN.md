@@ -27,6 +27,10 @@ PodLilt 是一款轻量的 macOS 悬浮播客播放器，用于展示和控制 *
 | 紧凑模式 / Compact Mode | 360 × 80 | 在单行布局中保留完整播放信息和控制能力。 |
 | 封面模式 / Cover Mode | 96 × 96 | 默认仅显示封面；悬停时显示播放、后退、前进及播放进度。 |
 
+## 下载安装
+
+请前往 [GitHub Releases](https://github.com/cndiandian/PodLilt/releases) 下载最新版本。分发的应用已使用 Developer ID 证书签名并通过 Apple 公证。
+
 ## 系统要求
 
 - macOS 14.0 或更高版本
@@ -50,6 +54,17 @@ open "dist/PodLilt.app"
 4. 对最终应用执行本地临时签名。
 
 如果 Xcode 更新后尚未完成首次设置或接受许可证，请先根据终端提示完成 Xcode 配置，再重新运行构建脚本。
+
+## 发布版本
+
+推送符合语义化版本格式的 Git 标签后，GitHub Actions 会自动构建、签名、公证并创建 GitHub Release：
+
+```sh
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+工作流会将 `PodLilt-vX.Y.Z.zip` 和对应的 SHA-256 校验文件添加到 Release。发布凭据保存在 GitHub Actions 加密的 Repository secrets 中。
 
 ## 辅助功能权限
 
@@ -80,7 +95,8 @@ PodLilt
 ├── Resources                # 应用图标资源
 ├── Vendor                   # MediaRemote Adapter
 ├── assets                   # README 图片资源
-├── scripts/build.sh         # 应用构建与打包脚本
+├── scripts                  # 应用构建与发布脚本
+├── .github/workflows        # 自动公证与发布工作流
 ├── AppInfo.plist            # macOS 应用配置
 └── Package.swift            # Swift Package 配置
 ```
