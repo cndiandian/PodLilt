@@ -81,7 +81,7 @@ final class PlayerModel: ObservableObject {
     func start() {
         refresh()
         timer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
-            Task { @MainActor in self?.refresh() }
+            Task { @MainActor [weak self] in self?.refresh() }
         }
     }
 

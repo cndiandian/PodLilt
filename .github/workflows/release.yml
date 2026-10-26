@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   release:
-    runs-on: macos-14
+    runs-on: macos-15
     env:
       APPLE_SIGNING_IDENTITY: "Developer ID Application: Sichuan Guangnian Zhixu Technology Co., Ltd (8T4S63Q2KK)"
 
