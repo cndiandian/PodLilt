@@ -1,5 +1,12 @@
 enum TraditionalChineseTranslations {
     static let values: [L10nKey: String] = [
+        .checkUpdates: "檢查更新",
+        .checkingUpdates: "正在檢查更新…",
+        .noUpdates: "目前已是最新版本。",
+        .downloadingUpdate: "正在下載更新…",
+        .updateReady: "安裝映像已開啟。請結束 PodLilt，將新版本拖入 Applications 取代安裝。",
+        .updateFailed: "更新失敗，請檢查網路後重試。",
+        .updateAssetUnavailable: "發現新版本，但該版本尚未提供 DMG 安裝檔案。",
         .about: "關於",
         .aboutPodLilt: "關於 PodLilt",
         .accessibilityDetail: "需要輔助使用權限來讀取播放資訊並控制播放。",

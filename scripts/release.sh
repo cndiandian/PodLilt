@@ -60,3 +60,23 @@ fi
 
 echo "$release_archive"
 echo "$checksum_file"
+
+dmg_path="$project_dir/dist/PodLilt-v${APP_VERSION}.dmg"
+dmg_stage="$(mktemp -d -t podlilt-dmg)"
+trap 'rm -f "$notary_result"; rm -rf "$dmg_stage"' EXIT
+/usr/bin/ditto "$app_path" "$dmg_stage/PodLilt.app"
+ln -s /Applications "$dmg_stage/Applications"
+/usr/bin/hdiutil create -volname PodLilt -srcfolder "$dmg_stage" -ov -format UDZO "$dmg_path"
+/usr/bin/codesign --force --sign "$CODE_SIGN_IDENTITY" --timestamp "$dmg_path"
+/usr/bin/xcrun notarytool submit "$dmg_path" \
+  --key "$APP_STORE_CONNECT_API_KEY_PATH" \
+  --key-id "$APP_STORE_CONNECT_API_KEY_ID" \
+  --issuer "$APP_STORE_CONNECT_API_ISSUER_ID" \
+  --wait --output-format json > "$notary_result"
+[[ "$(/usr/bin/plutil -extract status raw -o - "$notary_result")" == "Accepted" ]] || exit 1
+/usr/bin/xcrun stapler staple "$dmg_path"
+/usr/bin/xcrun stapler validate "$dmg_path"
+(
+  cd "${dmg_path:h}"
+  /usr/bin/shasum -a 256 "${dmg_path:t}" > "${dmg_path:t}.sha256"
+)

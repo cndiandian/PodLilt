@@ -1,5 +1,12 @@
 enum EnglishTranslations {
     static let values: [L10nKey: String] = [
+        .checkUpdates: "Check for Updates",
+        .checkingUpdates: "Checking for updates…",
+        .noUpdates: "You’re up to date.",
+        .downloadingUpdate: "Downloading update…",
+        .updateReady: "The installer is open. Quit PodLilt and drag the new app to Applications to replace it.",
+        .updateFailed: "Unable to update. Check your connection and try again.",
+        .updateAssetUnavailable: "A newer version is available, but its DMG installer is not available yet.",
         .about: "About",
         .aboutPodLilt: "About PodLilt",
         .accessibilityDetail: "Accessibility permission is required to read playback information and control playback.",

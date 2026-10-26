@@ -18,6 +18,7 @@ PodLilt is a lightweight floating podcast player for macOS that displays and con
 - Provides menu bar actions to show or hide the player, open Podcasts, switch modes and languages, view About information, and quit the app.
 - Supports Simplified Chinese, Traditional Chinese, English, and Japanese. It follows the macOS system language by default, allows manual override, and falls back to English when the system language is unsupported.
 - Preserves the original language of podcast show names, descriptions, and episode titles.
+- Checks GitHub Releases from About; newer versions are downloaded as a DMG and opened for installation.
 
 ## Player Modes
 
@@ -64,7 +65,7 @@ git tag v0.1.0
 git push origin v0.1.0
 ```
 
-The workflow attaches `PodLilt-vX.Y.Z.zip` and its SHA-256 checksum to the release. Release credentials are stored as encrypted GitHub Actions repository secrets.
+The workflow attaches signed and notarized `PodLilt-vX.Y.Z.dmg`, a ZIP archive, and their SHA-256 checksums to the release. Release credentials are stored as encrypted GitHub Actions repository secrets.
 
 ## Accessibility Permission
 

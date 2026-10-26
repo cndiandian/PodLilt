@@ -65,6 +65,8 @@ jobs:
           gh release create "$GITHUB_REF_NAME" \
             "dist/PodLilt-v${VERSION}.zip" \
             "dist/PodLilt-v${VERSION}.zip.sha256" \
+            "dist/PodLilt-v${VERSION}.dmg" \
+            "dist/PodLilt-v${VERSION}.dmg.sha256" \
             --verify-tag \
             --generate-notes \
             --title "PodLilt ${GITHUB_REF_NAME}"

@@ -3,6 +3,7 @@ import SwiftUI
 
 struct AboutView: View {
     @ObservedObject var model: PlayerModel
+    @StateObject private var updater = UpdateChecker()
     private let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "—"
 
     var body: some View {
@@ -28,13 +29,27 @@ struct AboutView: View {
             }
             .font(.system(size: 12))
 
+            VStack(spacing: 8) {
+                Button(model.text(.checkUpdates)) {
+                    Task { await updater.check() }
+                }
+                .disabled(updater.busy)
+                if updater.busy { ProgressView().controlSize(.small) }
+                if let message = updater.message {
+                    Text(model.text(message))
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+            }
+
             Text("Copyright © 2026 diandian")
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
         }
         .padding(.horizontal, 28)
         .padding(.vertical, 22)
-        .frame(width: 420, height: 310)
+        .frame(width: 420, height: 410)
     }
 
     private func infoRow(_ label: String, value: String) -> some View {

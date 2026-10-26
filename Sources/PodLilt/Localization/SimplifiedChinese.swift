@@ -1,5 +1,12 @@
 enum SimplifiedChineseTranslations {
     static let values: [L10nKey: String] = [
+        .checkUpdates: "检查更新",
+        .checkingUpdates: "正在检查更新…",
+        .noUpdates: "当前已是最新版本。",
+        .downloadingUpdate: "正在下载更新…",
+        .updateReady: "安装镜像已打开。请退出 PodLilt，将新版本拖入 Applications 替换安装。",
+        .updateFailed: "更新失败，请检查网络后重试。",
+        .updateAssetUnavailable: "发现新版本，但该版本尚未提供 DMG 安装文件。",
         .about: "关于",
         .aboutPodLilt: "关于 PodLilt",
         .accessibilityDetail: "需要辅助功能权限来读取播放信息并控制播放。",

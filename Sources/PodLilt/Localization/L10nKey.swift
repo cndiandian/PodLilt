@@ -1,4 +1,5 @@
 enum L10nKey: String, CaseIterable {
+    case checkUpdates, checkingUpdates, noUpdates, downloadingUpdate, updateReady, updateFailed, updateAssetUnavailable
     case about
     case aboutPodLilt
     case accessibilityDetail

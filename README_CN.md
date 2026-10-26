@@ -18,6 +18,7 @@ PodLilt 是一款轻量的 macOS 悬浮播客播放器，用于展示和控制 *
 - 菜单栏支持显示或隐藏播放器、打开 Podcasts、切换模式和语言、查看关于信息及退出应用。
 - 支持简体中文、繁體中文、English 和日本語；默认跟随 macOS 系统语言，也可以手动覆盖。无法匹配系统语言时使用 English。
 - 播客节目名称、简介和单集标题始终保留原文。
+- 关于窗口支持通过 GitHub Releases 检查更新，发现新版本后自动下载并打开 DMG 安装镜像。
 
 ## 播放器模式
 
@@ -64,7 +65,7 @@ git tag v0.1.0
 git push origin v0.1.0
 ```
 
-工作流会将 `PodLilt-vX.Y.Z.zip` 和对应的 SHA-256 校验文件添加到 Release。发布凭据保存在 GitHub Actions 加密的 Repository secrets 中。
+工作流会将签名并公证的 `PodLilt-vX.Y.Z.dmg`、ZIP 压缩包和对应的 SHA-256 校验文件添加到 Release。发布凭据保存在 GitHub Actions 加密的 Repository secrets 中。
 
 ## 辅助功能权限
 
