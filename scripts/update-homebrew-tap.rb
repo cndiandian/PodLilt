@@ -20,7 +20,7 @@ cask = <<~CASK
     desc "Lightweight floating player for Apple Podcasts"
     homepage "https://github.com/cndiandian/PodLilt"
 
-    depends_on macos: ">= :sonoma"
+    depends_on macos: :sonoma
 
     app "PodLilt.app"
   end
