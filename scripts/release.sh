@@ -4,6 +4,25 @@ set -euo pipefail
 project_dir="${0:A:h:h}"
 cd "$project_dir"
 
+# Apple's ticket service can temporarily drop connections, even after stapling.
+# Keep validation mandatory, but allow transient failures to recover.
+retry_ticket_operation() {
+  local attempt exit_code
+  for attempt in 1 2 3 4; do
+    if "$@"; then
+      return 0
+    else
+      exit_code=$?
+    fi
+    if (( attempt == 4 )); then
+      echo "Ticket operation failed after $attempt attempts (exit $exit_code)." >&2
+      return "$exit_code"
+    fi
+    echo "Ticket operation failed (exit $exit_code); retrying in $((attempt * 5)) seconds…" >&2
+    sleep "$((attempt * 5))"
+  done
+}
+
 : "${APP_VERSION:?APP_VERSION is required}"
 : "${BUILD_NUMBER:?BUILD_NUMBER is required}"
 : "${CODE_SIGN_IDENTITY:?CODE_SIGN_IDENTITY is required}"
@@ -47,8 +66,8 @@ if [[ "$notary_status" != "Accepted" ]]; then
   exit 1
 fi
 
-/usr/bin/xcrun stapler staple "$app_path"
-/usr/bin/xcrun stapler validate "$app_path"
+retry_ticket_operation /usr/bin/xcrun stapler staple "$app_path"
+retry_ticket_operation /usr/bin/xcrun stapler validate "$app_path"
 /usr/bin/codesign --verify --deep --strict --verbose=2 "$app_path"
 /usr/sbin/spctl --assess --type execute --verbose=2 "$app_path"
 
@@ -74,8 +93,8 @@ ln -s /Applications "$dmg_stage/Applications"
   --issuer "$APP_STORE_CONNECT_API_ISSUER_ID" \
   --wait --output-format json > "$notary_result"
 [[ "$(/usr/bin/plutil -extract status raw -o - "$notary_result")" == "Accepted" ]] || exit 1
-/usr/bin/xcrun stapler staple "$dmg_path"
-/usr/bin/xcrun stapler validate "$dmg_path"
+retry_ticket_operation /usr/bin/xcrun stapler staple "$dmg_path"
+retry_ticket_operation /usr/bin/xcrun stapler validate "$dmg_path"
 (
   cd "${dmg_path:h}"
   /usr/bin/shasum -a 256 "${dmg_path:t}" > "${dmg_path:t}.sha256"
