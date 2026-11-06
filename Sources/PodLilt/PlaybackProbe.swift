@@ -137,7 +137,9 @@ private enum MediaRemoteProbe {
         case .toggle:
             return run(["send", snapshot.isPlaying ? "1" : "0"]) != nil
         case .backward:
-            return run(["send", "12"]) != nil
+            guard let position = snapshot.position(at: Date()) else { return false }
+            let previous = max(0, position - 15)
+            return run(["seek", String(Int(previous * 1_000_000))]) != nil
         case .forward:
             guard let position = snapshot.position(at: Date()) else { return false }
             let next = min(snapshot.duration ?? position + 30, position + 30)
